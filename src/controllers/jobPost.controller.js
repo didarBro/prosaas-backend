@@ -51,7 +51,7 @@ exports.createJobPost = async (req, res, next) => {
 
 // @desc    Get all job posts
 // @route   GET /api/job-posts
-// @access  Public (or Private if you want to restrict)
+// @access  Public
 exports.getAllJobPosts = async (req, res, next) => {
   try {
     const {
@@ -131,7 +131,7 @@ exports.getJobPostById = async (req, res, next) => {
 
 // @desc    Update job post
 // @route   PUT /api/job-posts/:id
-// @access  Private
+// @access  Private (any authenticated user)
 exports.updateJobPost = async (req, res, next) => {
   try {
     const { title, department, location, type, description, requirements } =
@@ -146,13 +146,7 @@ exports.updateJobPost = async (req, res, next) => {
       });
     }
 
-    // Check if user is the creator of the job post
-    if (jobPost.createdBy.toString() !== req.user.userId) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to update this job post",
-      });
-    }
+    // ✅ Removed ownership check — any authenticated user can update
 
     // Update fields
     if (title) jobPost.title = title;
@@ -188,7 +182,7 @@ exports.updateJobPost = async (req, res, next) => {
 
 // @desc    Delete job post
 // @route   DELETE /api/job-posts/:id
-// @access  Private
+// @access  Private (any authenticated user)
 exports.deleteJobPost = async (req, res, next) => {
   try {
     const jobPost = await JobPost.findById(req.params.id);
@@ -200,13 +194,7 @@ exports.deleteJobPost = async (req, res, next) => {
       });
     }
 
-    // Check if user is the creator of the job post
-    if (jobPost.createdBy.toString() !== req.user.userId) {
-      return res.status(403).json({
-        success: false,
-        message: "Not authorized to delete this job post",
-      });
-    }
+    // ✅ Removed ownership check — any authenticated user can delete
 
     await jobPost.deleteOne();
 
@@ -219,4 +207,3 @@ exports.deleteJobPost = async (req, res, next) => {
     next(error);
   }
 };
-
