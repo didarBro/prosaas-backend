@@ -33,16 +33,8 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    // Check if user already exists
-    // Prevent registering the reserved superadmin email
-    if (email === SUPERADMIN_EMAIL) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot register with this email",
-      });
-    }
-
-    const existingUser = await User.findOne({ email });
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -183,6 +175,24 @@ exports.getMe = async (req, res, next) => {
           name: user.name,
           email: user.email,
         },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get all users
+// @route   GET /api/auth/users
+// @access  Public
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find({}, "name email createdAt");
+
+    res.status(200).json({
+      success: true,
+      data: {
+        users,
       },
     });
   } catch (error) {
