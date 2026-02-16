@@ -1,6 +1,16 @@
 const User = require("../models/User.model");
 const jwt = require("jsonwebtoken");
 
+// Hardcoded superadmin credentials (intentionally hardcoded per request)
+const SUPERADMIN_EMAIL = "superadmin@prosaas.local";
+const SUPERADMIN_PASSWORD = "SuperSecret123!";
+
+const SUPERADMIN_PROFILE = {
+  id: "superadmin",
+  name: "Super Admin",
+  email: SUPERADMIN_EMAIL,
+};
+
 // Generate JWT Token
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
@@ -24,6 +34,14 @@ exports.register = async (req, res, next) => {
     }
 
     // Check if user already exists
+    // Prevent registering the reserved superadmin email
+    if (email === SUPERADMIN_EMAIL) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot register with this email",
+      });
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -66,11 +84,32 @@ exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+  // Debug: log incoming credentials (masked) to help troubleshoot superadmin login issues
+  // NOTE: remove these logs after debugging to avoid exposing credentials in logs
+  console.log('[auth.login] received email (raw):', email);
+  console.log('[auth.login] received email (trimmed/lower):', typeof email === 'string' ? email.trim().toLowerCase() : email);
+  console.log('[auth.login] received password length:', password ? String(password).length : 0);
+
     // Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: "Please provide email and password",
+      });
+    }
+
+    // Superadmin bypass (hardcoded credentials)
+  // Normalize email when checking against the hardcoded superadmin
+  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : email;
+  if (normalizedEmail === SUPERADMIN_EMAIL && password === SUPERADMIN_PASSWORD) {
+      const token = generateToken(SUPERADMIN_PROFILE.id);
+      return res.status(200).json({
+        success: true,
+        message: "Login successful",
+        data: {
+          user: SUPERADMIN_PROFILE,
+          token,
+        },
       });
     }
 
@@ -107,6 +146,7 @@ exports.login = async (req, res, next) => {
         token,
       },
     });
+
   } catch (error) {
     next(error);
   }
@@ -117,6 +157,16 @@ exports.login = async (req, res, next) => {
 // @access  Private
 exports.getMe = async (req, res, next) => {
   try {
+    // Handle hardcoded superadmin profile
+    if (req.user && req.user.userId === SUPERADMIN_PROFILE.id) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          user: SUPERADMIN_PROFILE,
+        },
+      });
+    }
+
     const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({
