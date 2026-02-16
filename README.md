@@ -9,3 +9,6 @@ Usage:
 - The superadmin is a virtual user and is not stored in the database; do not attempt to register with the reserved email.
 
 Warning: Hardcoding credentials is insecure for production. Remove these credentials or protect them with environment variables before deploying to any public environment.
+
+
+MONGO_URI="mongodb+srv://didar:didar@prosaasbackend.jiozlqi.mongodb.net/?appName=prosaasbackend"
