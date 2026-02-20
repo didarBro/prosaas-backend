@@ -182,6 +182,24 @@ exports.getMe = async (req, res, next) => {
   }
 };
 
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+exports.logout = async (req, res, next) => {
+  try {
+    // Clear the token from the client-side
+    // Note: Since we're using JWT, tokens are stateless and cannot be revoked server-side
+    // without maintaining a blacklist. For a simple solution, the client should delete the token.
+    
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get all users
 // @route   GET /api/auth/users
 // @access  Public

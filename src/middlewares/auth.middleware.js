@@ -25,6 +25,18 @@ exports.protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
+      // Validate user still exists (optional but recommended)
+      // Skip for superadmin
+      if (decoded.userId !== "superadmin") {
+        const user = await User.findById(decoded.userId);
+        if (!user) {
+          return res.status(401).json({
+            success: false,
+            message: "User not found. Please log in again.",
+          });
+        }
+      }
+
       // Get user from token
       req.user = {
         userId: decoded.userId,
@@ -41,4 +53,5 @@ exports.protect = async (req, res, next) => {
     next(error);
   }
 };
+
 
